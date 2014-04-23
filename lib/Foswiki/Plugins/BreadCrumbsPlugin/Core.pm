@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2013 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2014 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,11 +25,11 @@ our $lowerAlphaRegex;
 our $upperAlphaRegex;
 our $numericRegex;
 
-use constant DEBUG => 0; # toggle me
+use constant TRACE => 0; # toggle me
 
 ###############################################################################
 sub writeDebug {
-  return unless DEBUG;
+  return unless TRACE;
 
   #Foswiki::Func::writeDebug('- BreadCrumbPlugin - '.$_[0]);
   print STDERR '- BreadCrumbPlugin - ' . $_[0] . "\n";
