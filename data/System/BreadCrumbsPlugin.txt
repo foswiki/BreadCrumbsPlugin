@@ -1,6 +1,9 @@
 %META:TOPICINFO{author="ProjectContributor" date="1209401597" format="1.1" version="1"}%
 ---+!! %TOPIC%
+%SHORTDESCRIPTION%
+
 %TOC%
+
 ---++ Description
 This plugin helps you to locate where you are, and shows you how
 you can escape from there using breadcrumbs navigation.
@@ -146,20 +149,15 @@ separator) may contain special variables:
 %BREADCRUMBS{"Web1/Web2/Web3.Topic" format="$name" separator=" &#187; " exclude="Web2"}%
 
 
----++ Plugin Installation Instructions
+---++ Installation Instructions
 %$INSTALL_INSTRUCTIONS%
 
----++ Plugin Info
-<!-- provided for compatibility only
-   * Set SHORTDESCRIPTION = A flexible way to display breadcrumbs navigation
--->
+---++ Dependencies
+%$DEPENDENCIES%
 
-|  Plugin Author: | Michael Daum |
-|  Copyright &copy;: | 2006-2014, Michael Daum http://michaeldaumconsulting.com |
-|  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
-|  Release: | %$RELEASE% |
-|  Version: | %$VERSION% |
-|  Change History: | &nbsp; |
+---++ Change History
+
+%TABLE{columnwidths="7em" tablewidth="100%"}%
 |  23 Apr 2014: | don't use DEBUG constant for local debug messages as it conflicts with =Assert.pm= |
 |  04 Nov 2013: | added =newtopicformat= |
 |  24 Feb 2012: | check access rights before extracting the !TopicTitle |
@@ -182,7 +180,17 @@ separator) may contain special variables:
 |  29 Jul 2006: | fixed infinit loop when a topic is its own parent topic |
 |  28 Jul 2006: | initial version; \
                   don't add the topic parent '<nop>WebHome' to the path |
-|  CPAN Dependencies: | none |
-|  Other Dependencies: | none |
-|  Plugin Home: | Foswiki:Extensions/%TOPIC% |
-|  Support: | Foswiki:Support/%TOPIC% |
+
+<!-- 
+   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
+-->
+
+%META:FORM{name="PackageForm"}%
+%META:FIELD{name="Author" title="Author" value="Michael Daum"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2006-2015, Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%TOPIC%"}%
+%META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%
+%META:FIELD{name="Release" title="Release" value="%$RELEASE%"}%
+%META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/BreadCrumbsPlugin"}%
+%META:FIELD{name="Support" title="Support" value="Foswiki:Support/%TOPIC%"}%
+%META:FIELD{name="Version" title="Version" value="%$VERSION%"}%
