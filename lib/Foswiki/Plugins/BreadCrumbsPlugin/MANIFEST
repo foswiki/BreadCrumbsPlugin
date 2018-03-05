@@ -1,3 +1,4 @@
+!noci
 data/System/BreadCrumbsPlugin.txt 0644
 lib/Foswiki/Plugins/BreadCrumbsPlugin/Core.pm 0644
 lib/Foswiki/Plugins/BreadCrumbsPlugin.pm 0644

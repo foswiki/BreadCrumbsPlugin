@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2015 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2018 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,45 +16,51 @@ package Foswiki::Plugins::BreadCrumbsPlugin::Core;
 
 use strict;
 use warnings;
+use constant TRACE => 0; # toggle me
 
 use Foswiki::Func ();
 use Foswiki::Plugins ();
 
-our $homeTopic;
-our $lowerAlphaRegex;
-our $upperAlphaRegex;
-our $numericRegex;
-
-use constant TRACE => 0; # toggle me
-
 ###############################################################################
-sub writeDebug {
-  return unless TRACE;
+sub new {
+  my $class = shift;
+  my $session = shift || $Foswiki::Plugins::SESSION;
 
-  #Foswiki::Func::writeDebug('- BreadCrumbPlugin - '.$_[0]);
-  print STDERR '- BreadCrumbPlugin - ' . $_[0] . "\n";
+  my $this = bless({
+    homeTopic =>
+       Foswiki::Func::getPreferencesValue('HOMETOPIC')
+      || $Foswiki::cfg{HomeTopicName}
+      || 'WebHome',
+    @_
+  }, $class);
+
+  return $this;
+
+  if ($Foswiki::Plugins::VERSION < 1.1) {
+    $this->{lowerAlphaRegex} = Foswiki::Func::getRegularExpression('lowerAlpha');
+    $this->{upperAlphaRegex} = Foswiki::Func::getRegularExpression('upperAlpha');
+    $this->{numericRegex} = Foswiki::Func::getRegularExpression('numeric');
+  }
+
+  return $this;
 }
 
 ###############################################################################
-sub init {
+sub finish {
+  my $this = shift;
 
-  $homeTopic =
-       Foswiki::Func::getPreferencesValue('HOMETOPIC')
-    || $Foswiki::cfg{HomeTopicName}
-    || 'WebHome';
-
-  if ($Foswiki::Plugins::VERSION < 1.1) {
-    $lowerAlphaRegex = Foswiki::Func::getRegularExpression('lowerAlpha');
-    $upperAlphaRegex = Foswiki::Func::getRegularExpression('upperAlpha');
-    $numericRegex = Foswiki::Func::getRegularExpression('numeric');
-  }
+  undef $this->{homeTopic};
+  undef $this->{lowerAlphaRegex};
+  undef $this->{upperAlphaRegex};
+  undef $this->{numericRegex};
+  undef $this->{i18n};
 }
 
 ###############################################################################
 sub recordTrail {
-  my ($web, $topic) = @_;
+  my ($this, $web, $topic) = @_;
 
-  writeDebug("called recordTrail($web, $topic)");
+  _writeDebug("called recordTrail($web, $topic)");
 
   ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $topic);
   my $here = "$web.$topic";
@@ -77,9 +83,9 @@ sub recordTrail {
 
 ###############################################################################
 sub renderBreadCrumbs {
-  my ($session, $params, $currentTopic, $currentWeb) = @_;
+  my ($this, $params, $currentTopic, $currentWeb) = @_;
 
-  writeDebug("called renderBreadCrumbs($currentWeb, $currentTopic)");
+  _writeDebug("called renderBreadCrumbs($currentWeb, $currentTopic)");
 
   # return an empty string if the current location is unknown
   return '' if $currentWeb eq 'Unknown' && $currentTopic eq 'Unknown';
@@ -100,7 +106,7 @@ sub renderBreadCrumbs {
   my $ellipsis = $params->{ellipsis};
   my $spaceout = $params->{spaceout} || 'off';
   my $spaceoutsep = $params->{spaceoutsep};
-  my $translate = Foswiki::Func::isTrue($params->{translate});
+  my $translate = Foswiki::Func::isTrue($params->{translate}, 1);
 
   $separator = ' ' unless defined $separator;
   $separator = '' if $separator eq 'none';
@@ -114,16 +120,16 @@ sub renderBreadCrumbs {
   my %recurseFlags = map { $_ => 1 } split(/,\s*/, $recurse);
 
   #foreach my $key (keys %recurseFlags) {
-  #  writeDebug("recurse($key)=$recurseFlags{$key}");
+  #  _writeDebug("recurse($key)=$recurseFlags{$key}");
   #}
 
   # compute breadcrumbs
-  my ($web, $topic) = normalizeWebTopicName($currentWeb, $webTopic);
+  my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($currentWeb, $webTopic);
   my $breadCrumbs;
   if ($type eq 'path') {
-    $breadCrumbs = getPathBreadCrumbs();
+    $breadCrumbs = $this->getPathBreadCrumbs();
   } else {
-    $breadCrumbs = getLocationBreadCrumbs($web, $topic, \%recurseFlags);
+    $breadCrumbs = $this->getLocationBreadCrumbs($web, $topic, \%recurseFlags);
   }
 
   my $doneSplice = 0;
@@ -137,9 +143,6 @@ sub renderBreadCrumbs {
 
   # format result
   my @lines = ();
-
-  my $i18n;
-  $i18n = $session->i18n() if $translate;
 
   foreach my $item (@$breadCrumbs) {
     next unless $item;
@@ -160,35 +163,33 @@ sub renderBreadCrumbs {
 
     my $name = $item->{name};
 
-    $name = spaceOutWikiWord($item->{name}, $spaceoutsep) if $spaceout;
-    $name = $i18n->maketext($name) if $translate;
+    $name = $this->spaceOutWikiWord($item->{name}, $spaceoutsep) if $spaceout;
+    $name = $this->translate($name, $item->{web}, $item->{topic}) if $translate;
     $line =~ s/\$name/$name/g;
     $line =~ s/\$target/$item->{target}/g;
     $line =~ s/\$webtopic/$webtopic/g;
     $line =~ s/\$topic/$item->{topic}/g;
     $line =~ s/\$web/$item->{web}/g;
 
-    #writeDebug("... added");
+    #_writeDebug("... added");
     push @lines, $line;
   }
   my $result = $header . ($doneSplice ? $ellipsis : '') . join($separator, @lines) . $footer;
 
-  # expand common variables
-  escapeParameter($result);
-
-  return $result;
+  return Foswiki::Func::decodeFormatTokens($result);
 }
 
 ###############################################################################
 sub getPathBreadCrumbs {
+  my $this = shift;
 
   my $trail = Foswiki::Func::getSessionValue('BREADCRUMB_TRAIL') || '';
   my @trail = map {
     /^(.*)\.(.*?)$/;
     my $web = $1;
     my $topic = $2;
-    my $name = getTopicTitle($web, $topic);
-    $name = $web if $name eq $topic && $topic eq $homeTopic;
+    my $name = $this->getTopicTitle($web, $topic);
+    $name = $web if $name eq $topic && $topic eq $this->{homeTopic};
     {
       target => $_,
       name => $name,
@@ -204,10 +205,10 @@ sub getPathBreadCrumbs {
 
 ###############################################################################
 sub getLocationBreadCrumbs {
-  my ($thisWeb, $thisTopic, $recurse) = @_;
+  my ($this, $thisWeb, $thisTopic, $recurse) = @_;
 
   my @breadCrumbs = ();
-  #writeDebug("called getLocationBreadCrumbs($thisWeb, $thisTopic)");
+  #_writeDebug("called getLocationBreadCrumbs($thisWeb, $thisTopic)");
 
   # collect all parent webs as breadcrumbs
   if ($recurse->{off} || $recurse->{weboff}) {
@@ -216,12 +217,12 @@ sub getLocationBreadCrumbs {
       $webName = $2;
     }
 
-    #writeDebug("adding breadcrumb: target=$thisWeb/$homeTopic, name=$webName");
+    #_writeDebug("adding breadcrumb: target=$thisWeb/$this->{homeTopic}, name=$webName");
     push @breadCrumbs, {
-      target => "$thisWeb/$homeTopic",
+      target => "$thisWeb/$this->{homeTopic}",
       name => $webName,
       web => $thisWeb,
-      topic => $homeTopic,
+      topic => $this->{homeTopic},
       istopic => 0,
       isnew => Foswiki::Func::webExists($thisWeb)?0:1,
     };
@@ -231,15 +232,15 @@ sub getLocationBreadCrumbs {
     foreach my $parentName (split(/\//, $thisWeb)) {
       $parentWeb .= '/' if $parentWeb;
       $parentWeb .= $parentName;
-      my $name = getTopicTitle($parentWeb, $homeTopic);
-      $name = $parentName if $name eq $homeTopic;
+      my $name = $this->getTopicTitle($parentWeb, $this->{homeTopic});
+      $name = $parentName if $name eq $this->{homeTopic};
 
-      #writeDebug("adding breadcrumb: target=$parentWeb/$homeTopic, name=$name");
+      #_writeDebug("adding breadcrumb: target=$parentWeb/$this->{homeTopic}, name=$name");
       push @webCrumbs, {
-        target => "$parentWeb/$homeTopic",
+        target => "$parentWeb/$this->{homeTopic}",
         name => $name,
         web => $parentWeb,
-        topic => $homeTopic,
+        topic => $this->{homeTopic},
         istopic => 0,
         isnew => Foswiki::Func::webExists($parentWeb)?0:1,
       };
@@ -269,19 +270,19 @@ sub getLocationBreadCrumbs {
       last unless $parentMeta;
       my $parentName = $parentMeta->{name};
       last unless $parentName;
-      ($web, $topic) = normalizeWebTopicName($web, $parentName);
+      ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $parentName);
 
       # check end of loop
       last
-        if $topic eq $homeTopic
+        if $topic eq $this->{homeTopic}
           || $seen{"$web.$topic"}
           || !Foswiki::Func::topicExists($web, $topic);
 
       # add breadcrumb
-      #writeDebug("adding breadcrumb: target=$web/$topic, name=$topic");
+      #_writeDebug("adding breadcrumb: target=$web/$topic, name=$topic");
       unshift @topicCrumbs, {
         target => "$web/$topic",
-        name => getTopicTitle($web, $topic),
+        name => $this->getTopicTitle($web, $topic),
         web => $web,
         topic => $topic,
         istopic => 1,
@@ -298,12 +299,12 @@ sub getLocationBreadCrumbs {
   }
 
   # add this topic if it was not covered yet
-  unless ($seen{"$thisWeb.$thisTopic"} || $recurse->{topicoff} || $thisTopic eq $homeTopic) {
+  unless ($seen{"$thisWeb.$thisTopic"} || $recurse->{topicoff} || $thisTopic eq $this->{homeTopic}) {
 
-    #writeDebug("finally adding breadcrumb: target=$thisWeb/$thisTopic, name=$thisTopic");
+    #_writeDebug("finally adding breadcrumb: target=$thisWeb/$thisTopic, name=$thisTopic");
     push @breadCrumbs, {
       target => "$thisWeb/$thisTopic",
-      name => getTopicTitle($thisWeb, $thisTopic),
+      name => $this->getTopicTitle($thisWeb, $thisTopic),
       web => $thisWeb,
       topic => $thisTopic,
       istopic => 1,
@@ -315,75 +316,92 @@ sub getLocationBreadCrumbs {
 }
 
 ###############################################################################
-sub escapeParameter {
-  return '' unless $_[0];
-
-  $_[0] =~ s/\$nop//g;
-  $_[0] =~ s/\$n/\n/g;
-  $_[0] =~ s/\$percnt/%/g;
-  $_[0] =~ s/\$dollar/\$/g;
-}
-
-###############################################################################
-# local version to run on legacy wiki releases
-sub normalizeWebTopicName {
-  my ($web, $topic) = @_;
-
-  if ($topic =~ /^(.*)[\.\/](.*?)$/) {
-    $web = $1;
-    $topic = $2;
-  }
-
-  return ($web, $topic);
-}
-
-###############################################################################
 sub getTopicTitle {
-  my ($theWeb, $theTopic) = @_;
+  my ($this, $theWeb, $theTopic) = @_;
+
+  my $topicTitle;
+  my $context = Foswiki::Func::getContext();
 
   # use DBCachePlugin if installed
-  if (Foswiki::Func::getContext()->{'DBCachePluginEnabled'}) {
+  if ($context->{'DBCachePluginEnabled'}) {
     require Foswiki::Plugins::DBCachePlugin;
-    return Foswiki::Plugins::DBCachePlugin::getTopicTitle($theWeb, $theTopic);
+    $topicTitle = Foswiki::Plugins::DBCachePlugin::getTopicTitle($theWeb, $theTopic);
+  } else {
+
+    # use core means otherwise
+    my ($meta, $text) = Foswiki::Func::readTopic($theWeb, $theTopic);
+
+    if ($Foswiki::cfg{SecureTopicTitles}) {
+      my $wikiName = Foswiki::Func::getWikiName();
+      return $theTopic
+        unless Foswiki::Func::checkAccessPermission('VIEW', $wikiName, $text, $theTopic, $theWeb, $meta);
+    }
+
+    my $field = $meta->get('FIELD', 'TopicTitle');
+    if ($field) {
+      $topicTitle = $field->{value};
+      return $topicTitle if $topicTitle;
+    }
+
+    $field = $meta->get('PREFERENCE', 'TOPICTITLE');
+    if ($field) {
+      $topicTitle = $field->{value};
+    }
   }
 
-  # use core means otherwise
-  my $topicTitle;
+  $topicTitle ||= $theTopic;
 
-  my ($meta, $text) = Foswiki::Func::readTopic($theWeb, $theTopic);
+  return $topicTitle;
+}
 
-  if ($Foswiki::cfg{SecureTopicTitles}) {
-    my $wikiName = Foswiki::Func::getWikiName();
-    return $theTopic
-      unless Foswiki::Func::checkAccessPermission('VIEW', $wikiName, $text, $theTopic, $theWeb, $meta);
+###############################################################################
+sub i18n {
+  my $this = shift;
+
+  unless (defined $this->{i18n}) {
+    $this->{i18n} = $this->{session}->i18n();
   }
 
-  my $field = $meta->get('FIELD', 'TopicTitle');
-  if ($field) {
-    $topicTitle = $field->{value};
-    return $topicTitle if $topicTitle;
+  return $this->{i18n};
+}
+
+###############################################################################
+sub translate {
+  my ($this, $string, $web, $topic) = @_;
+
+  my $result;
+
+  $string =~ s/^_+//; # strip leading underscore as maketext doesnt like it
+
+  my $context = Foswiki::Func::getContext();
+  if ($context->{'MultiLingualPluginEnabled'}) {
+    require Foswiki::Plugins::MultiLingualPlugin;
+    $result = Foswiki::Plugins::MultiLingualPlugin::translate($string, $web, $topic);
+  } else {
+    $result = $this->i18n->maketext($string);
   }
 
-  $field = $meta->get('PREFERENCE', 'TOPICTITLE');
-  if ($field) {
-    $topicTitle = $field->{value};
-    return $topicTitle if $topicTitle;
-  }
-
-  return $theTopic;
+  return $result;
 }
 
 ###############################################################################
 sub spaceOutWikiWord {
-  my ($wikiWord, $separator) = @_;
+  my ($this, $wikiWord, $separator) = @_;
 
   return Foswiki::Func::spaceOutWikiWord($wikiWord, $separator)
     if $Foswiki::Plugins::VERSION >= 1.13;
 
-  $wikiWord =~ s/([$lowerAlphaRegex])([$upperAlphaRegex$numericRegex]+)/$1$separator$2/go;
-  $wikiWord =~ s/([$numericRegex])([$upperAlphaRegex])/$1$separator$2/go;
+  $wikiWord =~ s/([$this->{lowerAlphaRegex}])([$this->{upperAlphaRegex}$this->{numericRegex}]+)/$1$separator$2/go;
+  $wikiWord =~ s/([$this->{numericRegex}])([$this->{upperAlphaRegex}])/$1$separator$2/go;
 
   return $wikiWord;
 }
 
+###############################################################################
+sub _writeDebug {
+  return unless TRACE;
+
+  #Foswiki::Func::writeDebug('- BreadCrumbPlugin - '.$_[0]);
+  print STDERR '- BreadCrumbPlugin - ' . $_[0] . "\n";
+}
 1;
