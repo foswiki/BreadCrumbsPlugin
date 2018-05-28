@@ -27,6 +27,7 @@ sub new {
   my $session = shift || $Foswiki::Plugins::SESSION;
 
   my $this = bless({
+    session => $session,
     homeTopic =>
        Foswiki::Func::getPreferencesValue('HOMETOPIC')
       || $Foswiki::cfg{HomeTopicName}
@@ -188,7 +189,7 @@ sub getPathBreadCrumbs {
     /^(.*)\.(.*?)$/;
     my $web = $1;
     my $topic = $2;
-    my $name = $this->getTopicTitle($web, $topic);
+    my $name = Foswiki::Func::getTopicTitle($web, $topic);
     $name = $web if $name eq $topic && $topic eq $this->{homeTopic};
     {
       target => $_,
@@ -232,7 +233,7 @@ sub getLocationBreadCrumbs {
     foreach my $parentName (split(/\//, $thisWeb)) {
       $parentWeb .= '/' if $parentWeb;
       $parentWeb .= $parentName;
-      my $name = $this->getTopicTitle($parentWeb, $this->{homeTopic});
+      my $name = Foswiki::Func::getTopicTitle($parentWeb, $this->{homeTopic});
       $name = $parentName if $name eq $this->{homeTopic};
 
       #_writeDebug("adding breadcrumb: target=$parentWeb/$this->{homeTopic}, name=$name");
@@ -282,7 +283,7 @@ sub getLocationBreadCrumbs {
       #_writeDebug("adding breadcrumb: target=$web/$topic, name=$topic");
       unshift @topicCrumbs, {
         target => "$web/$topic",
-        name => $this->getTopicTitle($web, $topic),
+        name => Foswiki::Func::getTopicTitle($web, $topic),
         web => $web,
         topic => $topic,
         istopic => 1,
@@ -304,7 +305,7 @@ sub getLocationBreadCrumbs {
     #_writeDebug("finally adding breadcrumb: target=$thisWeb/$thisTopic, name=$thisTopic");
     push @breadCrumbs, {
       target => "$thisWeb/$thisTopic",
-      name => $this->getTopicTitle($thisWeb, $thisTopic),
+      name => Foswiki::Func::getTopicTitle($thisWeb, $thisTopic),
       web => $thisWeb,
       topic => $thisTopic,
       istopic => 1,
@@ -313,45 +314,6 @@ sub getLocationBreadCrumbs {
   }
 
   return \@breadCrumbs;
-}
-
-###############################################################################
-sub getTopicTitle {
-  my ($this, $theWeb, $theTopic) = @_;
-
-  my $topicTitle;
-  my $context = Foswiki::Func::getContext();
-
-  # use DBCachePlugin if installed
-  if ($context->{'DBCachePluginEnabled'}) {
-    require Foswiki::Plugins::DBCachePlugin;
-    $topicTitle = Foswiki::Plugins::DBCachePlugin::getTopicTitle($theWeb, $theTopic);
-  } else {
-
-    # use core means otherwise
-    my ($meta, $text) = Foswiki::Func::readTopic($theWeb, $theTopic);
-
-    if ($Foswiki::cfg{SecureTopicTitles}) {
-      my $wikiName = Foswiki::Func::getWikiName();
-      return $theTopic
-        unless Foswiki::Func::checkAccessPermission('VIEW', $wikiName, $text, $theTopic, $theWeb, $meta);
-    }
-
-    my $field = $meta->get('FIELD', 'TopicTitle');
-    if ($field) {
-      $topicTitle = $field->{value};
-      return $topicTitle if $topicTitle;
-    }
-
-    $field = $meta->get('PREFERENCE', 'TOPICTITLE');
-    if ($field) {
-      $topicTitle = $field->{value};
-    }
-  }
-
-  $topicTitle ||= $theTopic;
-
-  return $topicTitle;
 }
 
 ###############################################################################
