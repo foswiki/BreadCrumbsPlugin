@@ -52,6 +52,7 @@ Foswiki:Extensions/DBCachePlugin to determine the !TopicTitle.
      (defaults to '[<nop>[$webtopic][$name]]')
    * =topicformat=: format string for any _topic_ items on the path; for example, parent topics. Defaults to the same as =format=.
    * =newtopicformat=: similar to =topicformat= but being used when the topic on the path doesn't exist
+   * =newwebformat=: similar to =newtopicformat= but being used when the web on the path doesn't exist
    * =footer=: format string appended to the output result
    * =separator=: format string to be put between items
      (defaults to one space char)
@@ -158,6 +159,7 @@ separator) may contain special variables:
 ---++ Change History
 
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  15 Aug 2018: | added =newwebformat= |
 |  28 May 2018: | removed local implementation of !TopicTitle and use Foswiki:Extensions/TopicTitlePlugin now |
 |  05 Mar 2018: | added optional support for Foswiki:Extensions/MultiLingualPlugin; modernized internals |
 |  31 Jan 2018: | modernized internals |

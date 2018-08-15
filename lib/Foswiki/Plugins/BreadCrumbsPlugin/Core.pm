@@ -97,6 +97,7 @@ sub renderBreadCrumbs {
   my $format = $params->{format};
   my $topicformat = $params->{topicformat};
   my $newTopicFormat = $params->{newtopicformat};
+  my $newWebFormat = $params->{newwebformat};
   my $footer = $params->{footer} || '';
   my $separator = $params->{separator};
   my $recurse = $params->{recurse} || 'on';
@@ -113,7 +114,8 @@ sub renderBreadCrumbs {
   $separator = '' if $separator eq 'none';
   $format = '[[$webtopic][$name]]' unless defined $format;
   $topicformat = $format unless defined $topicformat;
-  $newTopicFormat = $topicformat unless defined $newTopicFormat;
+  $newTopicFormat = '<nop>$topic' unless defined $newTopicFormat;
+  $newWebFormat = '<nop>$name' unless defined $newWebFormat;
   $ellipsis = ' ... ' unless defined $ellipsis;
   $spaceout = ($spaceout eq 'on') ? 1 : 0;
   $spaceoutsep = '-' unless defined $spaceoutsep;
@@ -156,7 +158,7 @@ sub renderBreadCrumbs {
     } else {
       next if $exclude ne '' && $item->{web} =~ /^($exclude)$/;
       next if $include ne '' && $item->{web} !~ /^($include)$/;
-      $line = $format;
+      $line = $item->{isnew}?$newWebFormat:$format;
     }
 
     my $webtopic = $item->{target};
@@ -225,7 +227,7 @@ sub getLocationBreadCrumbs {
       web => $thisWeb,
       topic => $this->{homeTopic},
       istopic => 0,
-      isnew => Foswiki::Func::webExists($thisWeb)?0:1,
+      isnew => (Foswiki::Func::webExists($thisWeb) && Foswiki::Func::topicExists($thisWeb, $this->{homeTopic}))?0:1,
     };
   } else {
     my $parentWeb = '';
@@ -243,7 +245,7 @@ sub getLocationBreadCrumbs {
         web => $parentWeb,
         topic => $this->{homeTopic},
         istopic => 0,
-        isnew => Foswiki::Func::webExists($parentWeb)?0:1,
+        isnew => (Foswiki::Func::webExists($parentWeb) && Foswiki::Func::topicExists($parentWeb, $this->{homeTopic}))?0:1,
       };
     }
     if ($recurse->{once} || $recurse->{webonce}) {

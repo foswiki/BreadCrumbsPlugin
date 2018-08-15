@@ -17,8 +17,8 @@ package Foswiki::Plugins::BreadCrumbsPlugin;
 use strict;
 use warnings;
 
-our $VERSION = '3.10';
-our $RELEASE = '28 May 2018';
+our $VERSION = '3.20';
+our $RELEASE = '15 Aug 2018';
 our $NO_PREFS_IN_TOPIC = 1;
 our $SHORTDESCRIPTION = 'A flexible way to display breadcrumbs navigation';
 our $core;
