@@ -47,6 +47,7 @@ Foswiki:Extensions/DBCachePlugin to determine the !TopicTitle.
    * =&lt;web>.&lt;topic>=: the location to which breadcrumbs should be generated (type="location" only, ignored if type="path")
      defaults to the current topic
    * =type=: "location" (the default) or "path"
+   * =relation=: parent property, defaults to "parent" for the native topic-parent-child relation; this can be a formfield that holds a reference to another topic, or even a list of properties to try one after the other until a valid parent has been found (e.g. "<nop>ParentTask, Client, parent" to use the formfields <nop>ParentTask or Client pointing to a parent, defaulting to the normal parent otherwise)
    * =header=: format string prepended to the output result
    * =format=: format string to render one item on the breadcrumbs path
      (defaults to '[<nop>[$webtopic][$name]]')
@@ -159,6 +160,7 @@ separator) may contain special variables:
 ---++ Change History
 
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  27 Apr 2022: | added =relation= |
 |  15 Aug 2018: | added =newwebformat= |
 |  28 May 2018: | removed local implementation of !TopicTitle and use Foswiki:Extensions/TopicTitlePlugin now |
 |  05 Mar 2018: | added optional support for Foswiki:Extensions/MultiLingualPlugin; modernized internals |
@@ -188,7 +190,7 @@ separator) may contain special variables:
 
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="2006-2018, Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2006-2022, Michael Daum"}%
 %META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%TOPIC%"}%
 %META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%
 %META:FIELD{name="Release" title="Release" value="%$RELEASE%"}%

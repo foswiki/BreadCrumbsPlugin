@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2018 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2022 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,8 +17,8 @@ package Foswiki::Plugins::BreadCrumbsPlugin;
 use strict;
 use warnings;
 
-our $VERSION = '3.20';
-our $RELEASE = '15 Aug 2018';
+our $VERSION = '4.00';
+our $RELEASE = '27 Apr 2022';
 our $NO_PREFS_IN_TOPIC = 1;
 our $SHORTDESCRIPTION = 'A flexible way to display breadcrumbs navigation';
 our $core;

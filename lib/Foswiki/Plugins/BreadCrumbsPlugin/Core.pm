@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2018 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2022 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -109,6 +109,7 @@ sub renderBreadCrumbs {
   my $spaceout = $params->{spaceout} || 'off';
   my $spaceoutsep = $params->{spaceoutsep};
   my $translate = Foswiki::Func::isTrue($params->{translate}, 1);
+  my @relation = split(/\s*,\s*/, $params->{relation} // 'parent');
 
   $separator = ' ' unless defined $separator;
   $separator = '' if $separator eq 'none';
@@ -132,7 +133,7 @@ sub renderBreadCrumbs {
   if ($type eq 'path') {
     $breadCrumbs = $this->getPathBreadCrumbs();
   } else {
-    $breadCrumbs = $this->getLocationBreadCrumbs($web, $topic, \%recurseFlags);
+    $breadCrumbs = $this->getLocationBreadCrumbs($web, $topic, \@relation, \%recurseFlags);
   }
 
   my $doneSplice = 0;
@@ -162,7 +163,7 @@ sub renderBreadCrumbs {
     }
 
     my $webtopic = $item->{target};
-    $webtopic =~ s/\//./go;
+    $webtopic =~ s/\//./g;
 
     my $name = $item->{name};
 
@@ -208,10 +209,10 @@ sub getPathBreadCrumbs {
 
 ###############################################################################
 sub getLocationBreadCrumbs {
-  my ($this, $thisWeb, $thisTopic, $recurse) = @_;
+  my ($this, $thisWeb, $thisTopic, $relation, $recurse) = @_;
 
   my @breadCrumbs = ();
-  #_writeDebug("called getLocationBreadCrumbs($thisWeb, $thisTopic)");
+  #_writeDebug("called getLocationBreadCrumbs($thisWeb, $thisTopic, @relation)");
 
   # collect all parent webs as breadcrumbs
   if ($recurse->{off} || $recurse->{weboff}) {
@@ -269,9 +270,18 @@ sub getLocationBreadCrumbs {
 
       # get parent
       my ($meta) = Foswiki::Func::readTopic($web, $topic);
-      my $parentMeta = $meta->get('TOPICPARENT');
-      last unless $parentMeta;
-      my $parentName = $parentMeta->{name};
+      my $parentName;
+      foreach my $rel (@$relation) {
+        if ($rel eq 'parent') {
+          my $parentField = $meta->get('TOPICPARENT');
+          $parentName = $parentField->{name} if $parentField;
+        } else {
+          my $formfield = $meta->get('FIELD', $rel);
+          $parentName = $formfield->{value} if $formfield
+        }
+        last if $parentName;
+      }
+
       last unless $parentName;
       ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $parentName);
 
@@ -355,8 +365,8 @@ sub spaceOutWikiWord {
   return Foswiki::Func::spaceOutWikiWord($wikiWord, $separator)
     if $Foswiki::Plugins::VERSION >= 1.13;
 
-  $wikiWord =~ s/([$this->{lowerAlphaRegex}])([$this->{upperAlphaRegex}$this->{numericRegex}]+)/$1$separator$2/go;
-  $wikiWord =~ s/([$this->{numericRegex}])([$this->{upperAlphaRegex}])/$1$separator$2/go;
+  $wikiWord =~ s/([$this->{lowerAlphaRegex}])([$this->{upperAlphaRegex}$this->{numericRegex}]+)/$1$separator$2/g;
+  $wikiWord =~ s/([$this->{numericRegex}])([$this->{upperAlphaRegex}])/$1$separator$2/g;
 
   return $wikiWord;
 }
