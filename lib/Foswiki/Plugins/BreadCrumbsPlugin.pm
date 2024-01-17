@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2022 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2024 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,16 +14,32 @@
 
 package Foswiki::Plugins::BreadCrumbsPlugin;
 
+=begin TML
+
+---+ package Foswiki::Plugins::BreadCrumbsPlugin
+
+base class to hook into the foswiki core
+
+=cut
+
 use strict;
 use warnings;
 
-our $VERSION = '4.00';
-our $RELEASE = '27 Apr 2022';
+our $VERSION = '4.01';
+our $RELEASE = '%$RELEASE%';
 our $NO_PREFS_IN_TOPIC = 1;
 our $SHORTDESCRIPTION = 'A flexible way to display breadcrumbs navigation';
+our $LICENSECODE = '%$LICENSECODE%';
 our $core;
 
-###############################################################################
+=begin TML
+
+---++ initPlugin($topic, $web, $user) -> $boolean
+
+initialize the plugin, automatically called during the core initialization process
+
+=cut
+
 sub initPlugin {
 
   Foswiki::Func::registerTagHandler(
@@ -45,15 +61,29 @@ sub initPlugin {
   return 1;
 }
 
-###############################################################################
+=begin TML
+
+---++ finishPlugin
+
+finish the plugin and the core if it has been used,
+automatically called during the core initialization process
+
+=cut
+
 sub finishPlugin {
-  if (defined $core) {
-    $core->finish();
-    undef $core;
-  }
+  $core->finish () if defined $core;
+  undef $core;
 }
 
-###############################################################################
+=begin TML
+
+---++ getCore() -> $core
+
+returns a singleton Foswiki::Plugins::BreadCrumbsPlugin::Core object for this plugin; a new core is allocated 
+during each session request; once a core has been created it is destroyed during =finishPlugin()=
+
+=cut
+
 sub getCore {
 
   unless (defined $core) {

@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2006-2022 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2006-2024 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,14 +14,32 @@
 
 package Foswiki::Plugins::BreadCrumbsPlugin::Core;
 
+=begin TML
+
+---+ package Foswiki::Plugins::BreadCrumbsPlugin::Core
+
+core class for this plugin
+
+an singleton instance is allocated on demand
+
+=cut
+
 use strict;
 use warnings;
+
 use constant TRACE => 0; # toggle me
 
 use Foswiki::Func ();
 use Foswiki::Plugins ();
 
-###############################################################################
+=begin TML
+
+---++ ClassMethod new() -> $core
+
+constructor for a Core object
+
+=cut
+
 sub new {
   my $class = shift;
   my $session = shift || $Foswiki::Plugins::SESSION;
@@ -35,8 +53,6 @@ sub new {
     @_
   }, $class);
 
-  return $this;
-
   if ($Foswiki::Plugins::VERSION < 1.1) {
     $this->{lowerAlphaRegex} = Foswiki::Func::getRegularExpression('lowerAlpha');
     $this->{upperAlphaRegex} = Foswiki::Func::getRegularExpression('upperAlpha');
@@ -46,7 +62,14 @@ sub new {
   return $this;
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod finish()
+
+called when this object is destroyed
+
+=cut
+
 sub finish {
   my $this = shift;
 
@@ -57,7 +80,14 @@ sub finish {
   undef $this->{i18n};
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod recordTrail($web, $topic)
+
+adds the web.topic to the trail record
+
+=cut
+
 sub recordTrail {
   my ($this, $web, $topic) = @_;
 
@@ -82,7 +112,14 @@ sub recordTrail {
   Foswiki::Func::setSessionValue('BREADCRUMB_TRAIL', join(',', @trail));
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod renderBreadCrumbs($params, $topic, $web) -> $string
+
+implements the %BREADCRUMBS macro
+
+=cut
+
 sub renderBreadCrumbs {
   my ($this, $params, $currentTopic, $currentWeb) = @_;
 
@@ -183,7 +220,14 @@ sub renderBreadCrumbs {
   return Foswiki::Func::decodeFormatTokens($result);
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod getPathBreadCrumbs() -> $list
+
+returns the path breadcrumbs of the recorded trail
+
+=cut
+
 sub getPathBreadCrumbs {
   my $this = shift;
 
@@ -207,7 +251,14 @@ sub getPathBreadCrumbs {
   return \@trail;
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod getLocationBreadCrumbs($web, $topic, $relation, $recurse) -> $list
+
+returns the location path starting at the given web.topic
+
+=cut
+
 sub getLocationBreadCrumbs {
   my ($this, $thisWeb, $thisTopic, $relation, $recurse) = @_;
 
@@ -328,7 +379,14 @@ sub getLocationBreadCrumbs {
   return \@breadCrumbs;
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod i18n()
+
+returns the session's i18n service
+
+=cut
+
 sub i18n {
   my $this = shift;
 
@@ -339,7 +397,14 @@ sub i18n {
   return $this->{i18n};
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod translate($string, $web, $topic) -> $string
+
+translates string as translated from the given web.topic
+
+=cut
+
 sub translate {
   my ($this, $string, $web, $topic) = @_;
 
@@ -358,7 +423,14 @@ sub translate {
   return $result;
 }
 
-###############################################################################
+=begin TML
+
+---++ ObjectMethod spaceOutWikiWord($wikiWord, $separator) -> $string
+
+compatibility layer for Foswiki::Func::spaceOutWikiWord
+
+=cut
+
 sub spaceOutWikiWord {
   my ($this, $wikiWord, $separator) = @_;
 
@@ -371,7 +443,7 @@ sub spaceOutWikiWord {
   return $wikiWord;
 }
 
-###############################################################################
+# static helpers
 sub _writeDebug {
   return unless TRACE;
 

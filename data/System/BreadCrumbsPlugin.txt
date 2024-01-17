@@ -160,6 +160,7 @@ separator) may contain special variables:
 ---++ Change History
 
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  17 Jan 2024: | improved pod documentation; fixed core constructor |
 |  27 Apr 2022: | added =relation= |
 |  15 Aug 2018: | added =newwebformat= |
 |  28 May 2018: | removed local implementation of !TopicTitle and use Foswiki:Extensions/TopicTitlePlugin now |
@@ -190,7 +191,7 @@ separator) may contain special variables:
 
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="2006-2022, Michael Daum"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2006-2024, Michael Daum"}%
 %META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%TOPIC%"}%
 %META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%
 %META:FIELD{name="Release" title="Release" value="%$RELEASE%"}%
